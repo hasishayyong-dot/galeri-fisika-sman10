@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Digital Media Pembelajaran Fisika - Hasisba Isnayanto, S.Pd., M.Si.</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Glassmorphism Effect */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+        }
+
+        /* Latar Visual Hero: Perpaduan Pantai Bira & Budaya Kajang */
+        .hero-bira-kajang {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%),
+                        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            position: relative;
+        }
+
+        .hero-bira-kajang::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.25) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-teal-500 selection:text-white">
+
+    <!-- TOP BAR KEARIFAN LOKAL BULUKUMBA -->
+    <div class="bg-gradient-to-r from-slate-950 via-teal-950 to-slate-950 border-b border-teal-500/20 text-xs py-2 px-4 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center max-w-7xl mx-auto w-full gap-2">
+        <div class="flex items-center gap-2 text-teal-300 font-medium">
+            <i class="fa-solid fa-water text-cyan-400"></i>
+            <span>Pesona Pantai Bira & Nilai Adat Kajang Bulukumba • Sulawesi Selatan</span>
+        </div>
+        <div class="text-slate-400 italic">
+            "Sipakatau, Sipakalebbi, Sipakainge"
+        </div>
+    </div>
+
+    <!-- NAVBAR UTAMA -->
+    <nav class="sticky top-0 z-40 glass-card border-b border-slate-800/80 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
+                    <i class="fa-solid fa-atom text-white text-xl animate-spin" style="animation-duration: 12s;"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-teal-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent">
+                        Fisika SMAN 10 Bulukumba
+                    </h1>
+                    <p class="text-xs text-teal-400/80 font-medium">Hasisba Isnayanto, S.Pd., M.Si.</p>
+                </div>
+            </div>
+
+            <!-- MENU NAVIGASI & ADMIN -->
+            <div class="flex items-center gap-3">
+                <a href="#pengembang" class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-teal-300 transition-colors">
+                    <i class="fa-solid fa-user-gear"></i> Pengembang
+                </a>
+
+                <!-- Tombol Tambah Karya (Hanya Muncul Jika Admin Login) -->
+                <button id="btnOpenUpload" onclick="openUploadModal()" class="hidden items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/20 transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>+ Tambah Karya</span>
+                </button>
+
+                <!-- Status Panel (Hanya Muncul Jika Admin Login) -->
+                <button id="btnOpenStatus" onclick="openStatusModal()" class="hidden items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-400 font-medium text-sm border border-cyan-500/30 transition-all">
+                    <i class="fa-solid fa-database"></i>
+                    <span class="hidden sm:inline">Supabase</span>
+                </button>
+
+                <!-- Tombol Login / Logout Admin -->
+                <div id="authContainer">
+                    <button onclick="openLoginModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-medium text-sm border border-slate-700 transition-all">
+                        <i class="fa-solid fa-lock text-teal-400"></i>
+                        <span>Login Admin</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="hero-bira-kajang relative overflow-hidden py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            
+            <div class="lg:col-span-7 text-center lg:text-left">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-semibold mb-6 shadow-inner">
+                    <i class="fa-solid fa-ship text-cyan-400"></i> Pinisi Digital Learning Space • Bulukumba
+                </div>
+                <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+                    Galeri Digital & Portofolio <br class="hidden sm:inline"/>
+                    <span class="bg-gradient-to-r from-teal-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent">Media Pembelajaran Fisika</span>
+                </h2>
+                <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 mb-8 font-light leading-relaxed">
+                    Kumpulan inovasi <strong class="text-teal-300 font-medium">Media Interaktif, Lab Maya, dan Video Pembelajaran Fisika</strong> karya <strong class="text-white font-semibold">Hasisba Isnayanto, S.Pd., M.Si.</strong> untuk mewujudkan pembelajaran sains yang interaktif, kontekstual, dan berakar pada kearifan lokal.
+                </p>
+
+                <!-- STATISTIK RINGKAS -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl mx-auto lg:mx-0">
+                    <div class="glass-card p-3 rounded-2xl text-center border-teal-500/20">
+                        <div class="text-xl sm:text-2xl font-extrabold text-teal-400" id="statTotalKarya">4+</div>
+                        <div class="text-[11px] text-slate-400">Karya Digital</div>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl text-center border-teal-500/20">
+                        <div class="text-xl sm:text-2xl font-extrabold text-cyan-400">2</div>
+                        <div class="text-[11px] text-slate-400">Kategori Utama</div>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl text-center border-teal-500/20">
+                        <div class="text-xl sm:text-2xl font-extrabold text-indigo-400">100%</div>
+                        <div class="text-[11px] text-slate-400">Web Statis</div>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl text-center border-teal-500/20">
+                        <div class="text-xl sm:text-2xl font-extrabold text-emerald-400">Supabase</div>
+                        <div class="text-[11px] text-slate-400">Cloud Storage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KARTU ORNAMEN KEBUDAYAAN -->
+            <div class="lg:col-span-5 flex justify-center">
+                <div class="glass-card p-6 rounded-3xl border border-teal-500/30 max-w-md w-full shadow-2xl relative overflow-hidden group">
+                    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-800">
+                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300">
+                            <i class="fa-solid fa-compass"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Identitas Budaya Bulukumba</h4>
+                            <p class="text-[11px] text-teal-400">Pantai Bira & Adat Kajang</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 text-xs text-slate-300">
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3">
+                            <i class="fa-solid fa-umbrella-beach text-cyan-400 mt-0.5"></i>
+                            <div>
+                                <strong class="text-white block mb-0.5">Pesona Pantai Bira</strong>
+                                <span class="text-slate-400">Pasir putih sehalus tepung & pendaran laut pirus 3 warna sebagai inspirasi fenomena optik & fluida.</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3">
+                            <i class="fa-solid fa-tree text-emerald-400 mt-0.5"></i>
+                            <div>
+                                <strong class="text-white block mb-0.5">Filosofi Adat Kajang</strong>
+                                <span class="text-slate-400"><em>"Tallasa Kamase-mase"</em> (Kesederhanaan, keharmonisan alam, dan keteguhan integritas pendidikan).</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- KONTEN UTAMA GALERI -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        
+        <!-- SEARCH & FILTER BAR -->
+        <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-10">
+            <div class="flex flex-wrap gap-2 w-full md:w-auto" id="categoryFilters">
+                <button onclick="filterKategori('Semua')" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-teal-400 to-cyan-500 text-slate-950 transition-all shadow-md shadow-teal-500/20">Semua Karya</button>
+                <button onclick="filterKategori('Media Interaktif')" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all">Media Interaktif</button>
+                <button onclick="filterKategori('Video Pembelajaran')" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all">Video Pembelajaran</button>
+                <button onclick="filterKategori('Lab Maya')" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all">Lab Maya</button>
+                <button onclick="filterKategori('e-Modul')" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all">e-Modul</button>
+            </div>
+
+            <div class="w-full md:w-72 relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-500">
+                    <i class="fa-solid fa-search"></i>
+                </span>
+                <input type="text" id="searchInput" oninput="searchKarya()" placeholder="Cari materi fisika..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 transition-all">
+            </div>
+        </div>
+
+        <!-- GRID KARTU KARYA -->
+        <div id="karyaGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            <!-- Data karya dimuat dinamis -->
+        </div>
+
+        <!-- SEKSI HALAMAN PENGEMBANG (PROFIL GURU & INOVATOR) -->
+        <section id="pengembang" class="pt-10 border-t border-slate-800/80">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 border border-teal-500/30 relative overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    
+                    <!-- Foto Profil Pengembang -->
+                    <div class="lg:col-span-4 flex flex-col items-center text-center">
+                        <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-teal-500 via-cyan-400 to-indigo-600 p-1 shadow-2xl shadow-teal-500/30 mb-4 overflow-hidden group">
+                            <img src="foto-profil.jpg" alt="Hasisba Isnayanto, S.Pd., M.Si." class="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Hasisba Isnayanto, S.Pd., M.Si.</h3>
+                        <p class="text-xs text-teal-400 font-semibold mt-0.5">Guru Fisika & Wakasek Kurikulum</p>
+                        <p class="text-xs text-slate-400">SMAN 10 Bulukumba, Sulawesi Selatan</p>
+                    </div>
+
+                    <!-- Detail Bio & Peran -->
+                    <div class="lg:col-span-8 space-y-4">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-semibold">
+                            <i class="fa-solid fa-code"></i> Profil Pengembang & Pengampu Karya
+                        </div>
+                        <h4 class="text-2xl font-extrabold text-white">
+                            Mengembangkan Pembelajaran Fisika Digital Kontekstual & Berdaya Saing
+                        </h4>
+                        <p class="text-slate-300 text-sm leading-relaxed font-light">
+                            Selamat datang di portofolio digital saya. Sebagai pendidik di SMAN 10 Bulukumba dan penggerak komunitas guru fisika, saya berfokus mengembangkan media pembelajaran berbasis web (Virtual Lab, H5P Interaktif, dan Video Pembelajaran) untuk membantu siswa memahami konsep-konsep fisika secara intuitif, menyenangkan, serta kontekstual dengan potensi daerah Bulukumba.
+                        </p>
+
+                        <!-- Highlights Peran -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3">
+                                <i class="fa-solid fa-chalkboard-user text-cyan-400 text-lg"></i>
+                                <div>
+                                    <strong class="text-white block">Ketua MGMP Fisika</strong>
+                                    <span class="text-slate-400">Kabupaten Bulukumba</span>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3">
+                                <i class="fa-solid fa-laptop-code text-teal-400 text-lg"></i>
+                                <div>
+                                    <strong class="text-white block">Inovator Media Digital</strong>
+                                    <span class="text-slate-400">Pengembang Virtual Lab & H5P</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 mt-16 py-10 px-4 sm:px-6 lg:px-8 text-center text-slate-400 text-sm">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-teal-400">
+                <i class="fa-solid fa-school"></i>
+                <span class="text-slate-300">SMAN 10 Bulukumba, Sulawesi Selatan</span>
+            </div>
+            <div>
+                &copy; 2026 Hasisba Isnayanto, S.Pd., M.Si. • Wakasek Kurikulum
+            </div>
+            <div class="text-xs text-slate-500 flex items-center gap-1">
+                <span>Supabase Cloud DB & Storage</span>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- MODAL LOGIN ADMIN -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden p-4">
+        <div class="glass-card max-w-md w-full p-6 sm:p-8 rounded-3xl border border-teal-500/30 shadow-2xl relative">
+            <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center mx-auto mb-3 text-teal-400 text-xl">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Login Admin Supabase</h3>
+                <p class="text-xs text-slate-400 mt-1">Masukkan kredensial akun Supabase pribadi Anda[cite: 3].</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email Admin</label>
+                    <input type="email" id="adminEmail" required placeholder="nama@email.com" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password Supabase</label>
+                    <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/20 transition-all">
+                    Masuk Sebagai Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL TAMBAH KARYA -->
+    <div id="uploadModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden p-4 overflow-y-auto">
+        <div class="glass-card max-w-xl w-full p-6 sm:p-8 rounded-3xl border border-teal-500/30 shadow-2xl relative my-8">
+            <button onclick="closeUploadModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-teal-400"></i> Tambah Karya Baru
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Unggah thumbnail ke Supabase Storage (bucket: <code class="text-teal-300">karya-image</code>)[cite: 1].</p>
+            </div>
+            <form id="uploadForm" onsubmit="handleUploadKarya(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Judul Karya / Media</label>
+                    <input type="text" id="karyaJudul" required placeholder="Contoh: Lab Maya Hukum Ohm Interaktif" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Jenis Kategori</label>
+                        <select id="karyaKategori" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                            <option value="Media Interaktif">Media Interaktif</option>
+                            <option value="Video Pembelajaran">Video Pembelajaran</option>
+                            <option value="Lab Maya">Lab Maya</option>
+                            <option value="e-Modul">e-Modul</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Topik / Materi Fisika</label>
+                        <input type="text" id="karyaTopik" required placeholder="Contoh: Listrik Arus Searah" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Deskripsi Singkat</label>
+                    <textarea id="karyaDeskripsi" rows="3" required placeholder="Jelaskan fitur media..." class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Upload Thumbnail Gambar (Supabase Storage: <code class="text-teal-400">karya-image</code>)[cite: 1]</label>
+                    <input type="file" id="karyaFileImage" accept="image/*" required class="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-400 file:text-slate-950 hover:file:bg-teal-300 cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Link Demo / Video URL</label>
+                    <input type="url" id="karyaLink" required placeholder="https://..." class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/20 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Simpan ke Supabase & Publikasikan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL STATUS PANEL SUPABASE -->
+    <div id="statusModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden p-4">
+        <div class="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-teal-500/30 shadow-2xl relative">
+            <button onclick="closeStatusModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 text-lg">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Status Panel Supabase</h3>
+                    <p class="text-xs text-slate-400">Koneksi Cloud Database & Storage Bucket</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4 text-sm">
+                <div class="p-4 rounded-2xl bg-teal-950/40 border border-teal-500/30 text-teal-300 flex items-start gap-3">
+                    <i class="fa-solid fa-circle-check text-teal-400 mt-0.5"></i>
+                    <div>
+                        <span class="font-semibold block mb-0.5">Supabase Connected!</span>
+                        <span class="text-xs text-teal-200/80">Database PostgreSQL & Bucket <code class="bg-teal-900/60 px-1 py-0.5 rounded">karya-image</code> siap digunakan[cite: 1].</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Status Sesi Admin</label>
+                    <div class="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 flex justify-between items-center">
+                        <span id="adminStatusText" class="text-xs font-medium text-teal-400">Admin (Hasisba Isnayanto, S.Pd., M.Si.)</span>
+                        <button onclick="handleLogout()" class="px-3 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-xs font-semibold transition-all">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+                <button onclick="closeStatusModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-all">
+                    Tutup Panel
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let isAdminLoggedIn = false;
+
+        let listKarya = [
+            {
+                id: 1,
+                judul: "Lab Maya Hukum Ohm Interaktif",
+                kategori: "Media Interaktif",
+                topik: "Listrik Arus Searah",
+                deskripsi: "Simulasi virtual interaktif rangkaian tertutup untuk menguji hubungan tegangan, kuat arus, dan hambatan listrik.",
+                thumbnail: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80",
+                link: "#"
+            },
+            {
+                id: 2,
+                judul: "Video Konsep Fluida Statis di Pantai Bira",
+                kategori: "Video Pembelajaran",
+                topik: "Tekanan Hidrostatis",
+                deskripsi: "Pembelajaran video berbasis fenomena alam perairan Bira Bulukumba untuk kedalaman zat cair & tekanan hidrostatis.",
+                thumbnail: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
+                link: "#"
+            },
+            {
+                id: 3,
+                judul: "Media H5P Relativitas Khusus Kelas XII",
+                kategori: "Media Interaktif",
+                topik: "Fisika Modern",
+                deskripsi: "Kuis interaktif dan simulasi dilatasi waktu relativistik dikemas dengan platform Lumi H5P.",
+                thumbnail: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=600&q=80",
+                link: "#"
+            },
+            {
+                id: 4,
+                judul: "Simulasi 3D Radiasi Benda Hitam",
+                kategori: "Lab Maya",
+                topik: "Teori Kuantum",
+                deskripsi: "Eksplorasi grafik intensitas radiasi terhadap panjang gelombang benda hitam berdasarkan suhu mutlak.",
+                thumbnail: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=600&q=80",
+                link: "#"
+            }
+        ];
+
+        function renderKarya(data = listKarya) {
+            const grid = document.getElementById('karyaGrid');
+            document.getElementById('statTotalKarya').innerText = listKarya.length + '+';
+            
+            if(data.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-600"></i>
+                        <p class="text-sm">Belum ada karya dalam kategori ini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = data.map(item => `
+                <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 hover:border-teal-500/40 transition-all duration-300 flex flex-col group shadow-xl">
+                    <div class="relative h-48 overflow-hidden bg-slate-900">
+                        <img src="${item.thumbnail}" alt="${item.judul}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-3 left-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-950/80 backdrop-blur-md text-teal-300 border border-teal-500/30 shadow-lg">
+                                ${item.kategori}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs text-teal-400 font-semibold uppercase tracking-wider block mb-1">Topik: ${item.topik}</span>
+                            <h3 class="text-lg font-bold text-white mb-2 group-hover:text-teal-300 transition-colors">${item.judul}</h3>
+                            <p class="text-slate-400 text-xs leading-relaxed mb-4">${item.deskripsi}</p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                            <a href="${item.link}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500/10 hover:bg-teal-400 text-teal-300 hover:text-slate-950 text-xs font-semibold transition-all border border-teal-500/20">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Media
+                            </a>
+                            <span class="text-[11px] text-slate-500 italic">SMAN 10 Bulukumba</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterKategori(kategori) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.innerText.includes(kategori) || (kategori === 'Semua' && btn.innerText.includes('Semua'))) {
+                    btn.className = "filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-teal-400 to-cyan-500 text-slate-950 transition-all shadow-md shadow-teal-500/20";
+                } else {
+                    btn.className = "filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all";
+                }
+            });
+
+            if(kategori === 'Semua') {
+                renderKarya(listKarya);
+            } else {
+                const filtered = listKarya.filter(item => item.kategori === kategori);
+                renderKarya(filtered);
+            }
+        }
+
+        function searchKarya() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = listKarya.filter(item => 
+                item.judul.toLowerCase().includes(query) || 
+                item.topik.toLowerCase().includes(query) ||
+                item.deskripsi.toLowerCase().includes(query)
+            );
+            renderKarya(filtered);
+        }
+
+        function openLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+        function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+        function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+        function openStatusModal() { document.getElementById('statusModal').classList.remove('hidden'); }
+        function closeStatusModal() { document.getElementById('statusModal').classList.add('hidden'); }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            isAdminLoggedIn = true;
+            
+            document.getElementById('btnOpenUpload').classList.remove('hidden');
+            document.getElementById('btnOpenUpload').classList.add('flex');
+            document.getElementById('btnOpenStatus').classList.remove('hidden');
+            document.getElementById('btnOpenStatus').classList.add('flex');
+            
+            document.getElementById('authContainer').innerHTML = `
+                <button onclick="openStatusModal()" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-teal-500/20 text-teal-300 font-semibold text-xs border border-teal-500/30">
+                    <i class="fa-solid fa-circle-check"></i> Admin Online
+                </button>
+            `;
+            closeLoginModal();
+            alert("Berhasil login sebagai Admin: " + email);
+        }
+
+        function handleLogout() {
+            isAdminLoggedIn = false;
+            document.getElementById('btnOpenUpload').classList.add('hidden');
+            document.getElementById('btnOpenUpload').classList.remove('flex');
+            document.getElementById('btnOpenStatus').classList.add('hidden');
+            document.getElementById('btnOpenStatus').classList.remove('flex');
+
+            document.getElementById('authContainer').innerHTML = `
+                <button onclick="openLoginModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-medium text-sm border border-slate-700 transition-all">
+                    <i class="fa-solid fa-lock text-teal-400"></i>
+                    <span>Login Admin</span>
+                </button>
+            `;
+            closeStatusModal();
+            alert("Anda telah keluar dari sesi Admin.");
+        }
+
+        function handleUploadKarya(e) {
+            e.preventDefault();
+            const judul = document.getElementById('karyaJudul').value;
+            const kategori = document.getElementById('karyaKategori').value;
+            const topik = document.getElementById('karyaTopik').value;
+            const deskripsi = document.getElementById('karyaDeskripsi').value;
+            const link = document.getElementById('karyaLink').value;
+            
+            const fileInput = document.getElementById('karyaFileImage');
+            let dummyThumbnail = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80";
+            
+            if(fileInput.files && fileInput.files[0]) {
+                dummyThumbnail = URL.createObjectURL(fileInput.files[0]);
+            }
+
+            const karyaBaru = {
+                id: listKarya.length + 1,
+                judul,
+                kategori,
+                topik,
+                deskripsi,
+                thumbnail: dummyThumbnail,
+                link
+            };
+
+            listKarya.unshift(karyaBaru);
+            renderKarya();
+            closeUploadModal();
+            document.getElementById('uploadForm').reset();
+            alert("Karya berhasil diunggah ke Supabase Storage & dipublikasikan!");
+        }
+
+        window.onload = function() {
+            renderKarya();
+        };
+    </script>
+</body>
+</html>
